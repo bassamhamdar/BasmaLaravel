@@ -5,7 +5,7 @@ use Carbon\Carbon;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use App\Http\Requests\CustomerRegisterRequest;
-
+use Illuminate\Support\Facades\Http;
 
 
 
@@ -49,21 +49,35 @@ class CustomerController extends Controller
     }
 
     public function register(CustomerRegisterRequest $request)
-    {       
+    {     
         $inputs = $request->validated();
-        $customer = new Customer();
-        $customer->fill($inputs);
-        $customer->save();
-        $token = auth()->login($customer);
-
-        return response()->json([
-            "status"=>200,
-            "success"=> true,
-            "message" => "you have been registered!",
-            'access_token' => $token,
-            'token_type'   => 'bearer',
-            'expires_in'   => auth()->factory()->getTTL() * 60
+        $response = Http::asForm()->post("https://www.google.com/recaptcha/api/siteverify", [
+            'secret' => '6LdJOp0dAAAAAAKcygoAcgFzcgM7MU6LrgOUB-fl',
+            'response' => $request->captcha,
+           
         ]);
+        if( $response['success'] == true ){
+            $customer = new Customer();
+            $customer->fill($inputs);
+            $customer->save();
+            $token = auth()->login($customer);
+    
+            return response()->json([
+                "status"=>200,
+                "success"=> true,
+                "message" => "you have been registered!",
+                'access_token' => $token,
+                'token_type'   => 'bearer',
+                'expires_in'   => auth()->factory()->getTTL() * 60
+            ]);
+        }else{
+            return response()->json([
+                "status"=>200,
+                "success"=> false,
+                "message" => "invalid recaptcha token",
+            ]);
+        }
+
     }
 
     public function login()

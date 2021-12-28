@@ -29,6 +29,7 @@ class CustomerRegisterRequest extends FormRequest
                 'name'=>['required'],
                 'email'=>['unique:customers','required','regex:/(.+)@(.+)\.(.+)/i'],
                 'password'=>['required'],
+                'captcha'=>['required'],
             ];
 
     }
